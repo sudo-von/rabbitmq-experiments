@@ -6,19 +6,17 @@ import (
 	"github.com/streadway/amqp"
 )
 
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Fatalf("%s: %s", msg, err)
-	}
-}
-
 func main() {
-	conn, err := amqp.Dial("amqp://sudo:von@localhost:5672/")
-	failOnError(err, "Failed to connect to RabbitMQ")
-	defer conn.Close()
+
+	conn, err := amqp.Dial("amqp://sudo:von@rabbitmq:5672/")
+	if err != nil {
+		log.Fatalf("%s: %s", "Failed to connect to RabbitMQ", err)
+	}
 
 	ch, err := conn.Channel()
-	failOnError(err, "Failed to open a channel")
+	if err != nil {
+		log.Fatalf("%s: %s", "Failed to open a channel", err)
+	}
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
@@ -29,7 +27,9 @@ func main() {
 		false,   // no-wait
 		nil,     // arguments
 	)
-	failOnError(err, "Failed to declare a queue")
+	if err != nil {
+		log.Fatalf("%s: %s", "Failed to declare a queue", err)
+	}
 
 	body := "Hello World!"
 	err = ch.Publish(
@@ -41,5 +41,7 @@ func main() {
 			ContentType: "text/plain",
 			Body:        []byte(body),
 		})
-	failOnError(err, "Failed to publish a message")
+	if err != nil {
+		log.Fatalf("%s: %s", "Failed to publish a message", err)
+	}
 }
